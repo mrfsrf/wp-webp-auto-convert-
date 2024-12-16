@@ -40,7 +40,7 @@ class AutoWebPConverter
   }
 
   /**
-   * Add WebP to allowed MIME types
+   * Add WebP to allowed MIME types.
    */
   public function add_webp_mime(array $mimes): array|null
   {
@@ -49,8 +49,8 @@ class AutoWebPConverter
   }
 
   /**
-   * Convert uploaded image to WebP
-   * Only process jpeg and png
+   * Convert uploaded image to WebP.
+   * Only process jpeg and png.
    */
   public function convert_to_webp(array $upload): array
   {
@@ -77,7 +77,7 @@ class AutoWebPConverter
   }
 
   /**
-   * Get WebP filename from original
+   * Get WebP filename from original.
    */
   private function get_webp_path(string $file_path): string
   {
@@ -85,12 +85,12 @@ class AutoWebPConverter
   }
 
   /**
-   * Create WebP version of image using GD
+   * Create WebP version of image.
    */
   private function create_webp_image(
     string $source_path,
     string $webp_path,
-    array $options = $this->options
+    array $options = [] 
   ): void {
     WebPConvert::convert($source_path, $webp_path, $options);
   }
@@ -105,7 +105,6 @@ class AutoWebPConverter
     $file = \get_attached_file($attachment_id);
     $dir = pathinfo($file, PATHINFO_DIRNAME);
 
-    // Convert each thumbnail
     foreach ($metadata['sizes'] as $size => $data) {
       $thumbnail_path = $dir . '/' . $data['file'];
       $webp_path = $this->get_webp_path($thumbnail_path);
@@ -141,7 +140,7 @@ class AutoWebPConverter
           ],
           'cache-control-header' => 'public, max-age=31536000', // 1 year
         ],
-        // TODO: Add Webp conversion for images that are not yet converted
+        // TODO: Add Webp conversion for images that are not yet converted.
         // 'convert' => $this->convert_options,
       ]);
       exit;
@@ -151,7 +150,7 @@ class AutoWebPConverter
   }
 
   /**
-   * Only process if it's an image request
+   * Only process if it's an image request.
    */
   private function is_image_request(): bool
   {
