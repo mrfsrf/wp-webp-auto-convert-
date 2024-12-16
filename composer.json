@@ -1,0 +1,17 @@
+{
+    "name": "mrfsrf/wp-webp-auto-convert",
+    "authors": [
+        {
+            "name": "Luka Juras",
+            "email": "mrfsrf@gmail.com"
+        }
+    ],
+    "require": {
+        "rosell-dk/webp-convert": "^2.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "mrfsrf\\": "src/"
+        }
+    }
+}
