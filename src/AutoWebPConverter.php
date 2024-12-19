@@ -1,28 +1,16 @@
 <?php
+
 namespace Mrfsrf\WpWebpAutoConvert;
 
-use Exception;
 use Mrfsrf\WpWebpAutoConvert\Cwebp;
 
 class AutoWebPConverter
 {
-  protected array $options = [
-    'png' => [
-      'encoding'      => 'auto',
-      'near-lossless' => 60,
-      'quality'       => 85,
-      'sharp-yuv'     => true,
-    ],
-    'jpeg' => [
-      'encoding'      => 'auto',
-      'quality'       => 75,
-      'auto-limit'    => true,
-      'sharp-yuv'     => true,
-    ],
-  ];
+  protected Config $config;
 
-  public function __construct()
+  public function __construct(Config $config = null)
   {
+    $this->config = $config; 
     \add_filter('wp_handle_upload', [$this, 'convert_to_webp']);
     \add_filter('upload_mimes', [$this, 'add_webp_mime']);
   }
@@ -41,8 +29,6 @@ class AutoWebPConverter
   public function convert_to_webp(array $upload): array
   {
     $allowed_types = ['image/jpeg', 'image/png'];
-    // TEMP!
-    // $upload = $this->create_file_array($file);
     if (!in_array($upload['type'], $allowed_types)) return $upload;
 
     $file_path = $upload['file'];
@@ -52,7 +38,7 @@ class AutoWebPConverter
     try {
       $this->create_webp_image($file_path, $webp_path, $mime_type);
       $upload['webp_file'] = $webp_path; // Keep original file and add WebP version
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       // echo 'WebP Conversion Error: ' . $e->getMessage();
       \add_action('admin_notices', function () use ($e) {
         printf(
@@ -81,7 +67,8 @@ class AutoWebPConverter
     \exec('command -v cwebp', $output, $return_status);
 
     if ($return_status === 0) {
-      Cwebp::init($this->options);
+      $format_config = $this->config->get_format_config($mime_type);
+      Cwebp::init($format_config);
       $command = Cwebp::build_cwebp_command(
         $source_path,
         $webp_path,

@@ -32,6 +32,6 @@ class DeleteWebp extends AutoWebPConverter
         }
       }
     }
-
   }
+
 }
