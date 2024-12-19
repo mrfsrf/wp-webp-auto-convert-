@@ -1,6 +1,6 @@
 <?php
 
-namespace mrfsrf;
+namespace Mrfsrf\WpWebpAutoConvert;
 
 class Cwebp
 {
@@ -16,11 +16,15 @@ class Cwebp
     string $webp_path,
     string $image_type): string
   {
-    if (!isset(self::$options[$image_type]))
+    // error_log('bla ' . print_r($image_type, true));
+    $mime_type = str_replace('image/', '', $image_type);
+     if (!isset(self::$options[$mime_type]))
       throw new \InvalidArgumentException("Unsupported image type: $image_type");
 
-    $opts = self::$options[$image_type];
+    $opts = self::$options[$mime_type];
     $command_parts = ['cwebp'];
+
+    // error_log('$opts in Cwebp: ' . print_r($opts, true));
 
     // Map the options to cwebp flags
     foreach ($opts as $key => $value) {
@@ -49,7 +53,7 @@ class Cwebp
 
     $command_parts[] = escapeshellarg($source_path);
     $command_parts[] = "-o " . escapeshellarg($webp_path);
-
+    error_log('command parts ' . print_r($command_parts, true));
     return implode(' ', $command_parts);
   }
 

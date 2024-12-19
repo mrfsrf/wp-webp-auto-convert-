@@ -1,14 +1,9 @@
 <?php
-
-namespace mrfsrf;
+namespace Mrfsrf\WpWebpAutoConvert;
 
 use Exception;
-use mrfsrf\WPEnv;
-use mrfsrf\Cwebp;
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+use Mrfsrf\WpWebpAutoConvert\Cwebp;
 
-WPEnv::check();
 class AutoWebPConverter
 {
   protected array $options = [
@@ -58,7 +53,7 @@ class AutoWebPConverter
       $this->create_webp_image($file_path, $webp_path, $mime_type);
       $upload['webp_file'] = $webp_path; // Keep original file and add WebP version
     } catch (Exception $e) {
-      echo 'WebP Conversion Error: ' . $e->getMessage();
+      // echo 'WebP Conversion Error: ' . $e->getMessage();
       \add_action('admin_notices', function () use ($e) {
         printf(
           '<div class="error"><p>%s</p></div>',
@@ -110,28 +105,4 @@ class AutoWebPConverter
     // Only allow access to files in uploads directory
     return strpos($real_path, $real_uploads) === 0;
   }
-
-  ///// TEMP just for testing
-  // protected function create_file_array($file_path)
-  // {
-  //   if (!file_exists($file_path))
-  //     throw new \Exception("File not found: $file_path");
-
-  //   // Get file info
-  //   $path_info = pathinfo($file_path);
-  //   $mime_type = mime_content_type($file_path);
-  //   // Get absolute path
-  //   $absolute_path = realpath($file_path);
-
-  //   return [
-  //     'name' => $path_info['basename'],
-  //     'type' => $mime_type,
-  //     'tmp_name' => $absolute_path,
-  //     'error' => 0,
-  //     'file' => $file_path,
-  //     'size' => filesize($file_path)
-  //   ];
-  //   // print_r($a);
-  //   // return $a;
-  // }
 }

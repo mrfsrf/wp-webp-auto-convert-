@@ -1,10 +1,5 @@
 <?php
-namespace mrfsrf;
-
-use mrfsrf\WPEnv;
-use Exception;
-
-WPEnv::check();
+namespace Mrfsrf\WpWebpAutoConvert;
 
 class ServeWebp extends AutoWebPConverter
 {

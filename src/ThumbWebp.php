@@ -1,10 +1,6 @@
 <?php
 
-namespace mrfsrf;
-
-use mrfsrf\WPEnv;
-
-WPEnv::check();
+namespace Mrfsrf\WpWebpAutoConvert;
 
 class ThumbWebp extends AutoWebPConverter
 {
@@ -24,7 +20,7 @@ class ThumbWebp extends AutoWebPConverter
     foreach ($metadata['sizes'] as $size => $data) {
       $thumb_path = $dir . '/' . $data['file'];
       $webp_path  = $this->get_webp_path($thumb_path);
-      $mime_type = str_replace('image/', '', $data['mime-type'];
+      $mime_type = str_replace('image/', '', $data['mime-type']);
 
       $this->create_webp_image($thumb_path, $webp_path, $data['mime-type']);
       // Add WebP version to metadata
