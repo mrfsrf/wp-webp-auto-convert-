@@ -16,15 +16,12 @@ class Cwebp
     string $webp_path,
     string $image_type): string
   {
-    // error_log('bla ' . print_r($image_type, true));
     $mime_type = str_replace('image/', '', $image_type);
      if (!isset(self::$options[$mime_type]))
       throw new \InvalidArgumentException("Unsupported image type: $image_type");
 
     $opts = self::$options[$mime_type];
     $command_parts = ['cwebp'];
-
-    // error_log('$opts in Cwebp: ' . print_r($opts, true));
 
     // Map the options to cwebp flags
     foreach ($opts as $key => $value) {

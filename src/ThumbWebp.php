@@ -22,7 +22,7 @@ class ThumbWebp extends AutoWebPConverter
       $webp_path  = $this->get_webp_path($thumb_path);
       $mime_type = str_replace('image/', '', $data['mime-type']);
 
-      $this->create_webp_image($thumb_path, $webp_path, $data['mime-type']);
+      $this->create_webp_image($thumb_path, $webp_path, $mime_type);
       // Add WebP version to metadata
       $metadata['sizes'][$size]['webp'] = basename($webp_path);
     }
