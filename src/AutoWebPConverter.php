@@ -21,14 +21,12 @@ class AutoWebPConverter
       'auto-limit'    => true,
       'sharp-yuv'     => true,
     ],
-    'converter' => [
-      'cwebp',
-      'vips',
-      'imagick',
-      'gmagick',
-      'imagemagick',
-      'graphicsmagick'
-    ]
+    'converter' => 'cwebp',
+    // 'vips',
+    // 'imagick',
+    // 'gmagick',
+    // 'imagemagick',
+    // 'graphicsmagick'
   ];
 
   public function __construct()
@@ -64,8 +62,8 @@ class AutoWebPConverter
       $this->create_webp_image($file_path, $webp_path, $this->options);
       $upload['webp_file'] = $webp_path; // Keep original file and add WebP version
     } catch (Exception $e) {
-      echo 'WebP Conversion Error: ' . $e->getMessage();
-      add_action('admin_notices', function () use ($e) {
+      // echo 'WebP Conversion Error: ' . $e->getMessage();
+      \add_action('admin_notices', function () use ($e) {
         printf(
           '<div class="error"><p>%s</p></div>',
           \esc_html('WebP conversion failed: ' . $e->getMessage())
@@ -144,7 +142,7 @@ class AutoWebPConverter
         // 'convert' => $this->convert_options,
       ]);
       exit;
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
       error_log('WebP conversion failed: ' . $e->getMessage());
     }
   }
