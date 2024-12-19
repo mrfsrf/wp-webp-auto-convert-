@@ -2,8 +2,9 @@
 
 namespace mrfsrf;
 
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 use Exception;
-use WebPConvert\WebPConvert;
 
 class AutoWebPConverter
 {
@@ -21,20 +22,16 @@ class AutoWebPConverter
       'auto-limit'    => true,
       'sharp-yuv'     => true,
     ],
-    'converter' => 'cwebp',
-    // 'vips',
-    // 'imagick',
-    // 'gmagick',
-    // 'imagemagick',
-    // 'graphicsmagick'
   ];
 
-  public function __construct()
+  public function __construct(string $file = null)
   {
+    // $this->convert_to_webp($file);
     \add_filter('wp_handle_upload', [$this, 'convert_to_webp']);
     \add_filter('upload_mimes', [$this, 'add_webp_mime']);
     \add_filter('wp_generate_attachment_metadata', [$this, 'handle_thumbnails'], 10, 2);
-    \add_action('template_redirect', [$this, 'maybe_serve_webp']);
+    // TODO implement
+    // \add_action('template_redirect', [$this, 'maybe_serve_webp']);
   }
 
   /**
@@ -53,16 +50,19 @@ class AutoWebPConverter
   public function convert_to_webp(array $upload): array
   {
     $allowed_types = ['image/jpeg', 'image/png'];
+    // TEMP!
+    // $upload = $this->create_file_array($file);
     if (!in_array($upload['type'], $allowed_types)) return $upload;
 
     $file_path = $upload['file'];
     $webp_path = $this->get_webp_path($file_path);
+    $mime_type = str_replace('image/', '', $upload['type']);
 
     try {
-      $this->create_webp_image($file_path, $webp_path, $this->options);
+      $this->create_webp_image($file_path, $webp_path, $mime_type);
       $upload['webp_file'] = $webp_path; // Keep original file and add WebP version
     } catch (Exception $e) {
-      // echo 'WebP Conversion Error: ' . $e->getMessage();
+      echo 'WebP Conversion Error: ' . $e->getMessage();
       \add_action('admin_notices', function () use ($e) {
         printf(
           '<div class="error"><p>%s</p></div>',
@@ -70,7 +70,7 @@ class AutoWebPConverter
         );
       });
     }
-
+    // print_r($upload);
     return $upload;
   }
 
@@ -88,9 +88,22 @@ class AutoWebPConverter
   private function create_webp_image(
     string $source_path,
     string $webp_path,
-    array $options = [] 
+    string $mime_type,
   ): void {
-    WebPConvert::convert($source_path, $webp_path, $options);
+    $output = [];
+    $return_status = null;
+    \exec('command -v cwebp', $output, $return_status);
+
+    if ($return_status === 0) {
+      $command = $this->build_cwebp_command(
+        $source_path,
+        $webp_path,
+        $mime_type 
+      );
+      $this->execute_cwebp_command($command);
+    } else {
+      throw new \RuntimeException("cwebp is not installed");
+    }
   }
 
   /**
@@ -121,30 +134,30 @@ class AutoWebPConverter
    */
   public function maybe_serve_webp(): void
   {
-    if (!$this->is_image_request()) return;
+    // if (!$this->is_image_request()) return;
 
-    $source = $this->get_image_path();
-    if (!$source || !file_exists($source)) return;
+    // $source = $this->get_image_path();
+    // if (!$source || !file_exists($source)) return;
 
-    $destination = $this->get_webp_path($source);
+    // $destination = $this->get_webp_path($source);
 
-    try {
-      WebPConvert::serveConverted($source, $destination, [
-        'fail' => 'original',  // Serve original if conversion fails
-        'serve-image' => [
-          'headers' => [
-            'cache-control' => true,
-            'vary-accept' => true,
-          ],
-          'cache-control-header' => 'public, max-age=31536000', // 1 year
-        ],
-        // TODO: Add Webp conversion for images that are not yet converted.
-        // 'convert' => $this->convert_options,
-      ]);
-      exit;
-    } catch (Exception $e) {
-      error_log('WebP conversion failed: ' . $e->getMessage());
-    }
+    // try {
+    //   WebPConvert::serveConverted($source, $destination, [
+    //     'fail' => 'original',  // Serve original if conversion fails
+    //     'serve-image' => [
+    //       'headers' => [
+    //         'cache-control' => true,
+    //         'vary-accept' => true,
+    //       ],
+    //       'cache-control-header' => 'public, max-age=31536000', // 1 year
+    //     ],
+    //     // TODO: Add Webp conversion for images that are not yet converted.
+    //     // 'convert' => $this->convert_options,
+    //   ]);
+    //   exit;
+    // } catch (Exception $e) {
+    //   error_log('WebP conversion failed: ' . $e->getMessage());
+    // }
   }
 
   /**
@@ -180,4 +193,87 @@ class AutoWebPConverter
     // Only allow access to files in uploads directory
     return strpos($real_path, $real_uploads) === 0;
   }
+
+  private function build_cwebp_command(
+    string $source_path, 
+    string $webp_path,
+    string $image_type): string
+  {
+    if (!isset($this->options[$image_type]))
+      throw new \InvalidArgumentException("Unsupported image type: $image_type");
+
+    $opts = $this->options[$image_type];
+    $command_parts = ['cwebp'];
+
+    // Map the options to cwebp flags
+    foreach ($opts as $key => $value) {
+      switch ($key) {
+        case 'quality':
+          $command_parts[] = "-q $value";
+          break;
+        case 'near-lossless':
+          $command_parts[] = "-near_lossless $value";
+          break;
+        case 'sharp-yuv':
+          if ($value === true) {
+            $command_parts[] = "-sharp_yuv";
+          }
+          break;
+        case 'encoding':
+          // Handle 'auto' encoding - might want to implement specific logic
+          // or ignore it since cwebp handles this automatically
+          break;
+        case 'auto-limit':
+          // This might need custom implementation depending on what 
+          // auto-limit is supposed to do
+          break;
+      }
+    }
+
+    $command_parts[] = escapeshellarg($source_path);
+    $command_parts[] = "-o " . escapeshellarg($webp_path);
+
+    return implode(' ', $command_parts);
+  }
+
+  private function execute_cwebp_command(string $command): void
+  {
+    try {
+      $output = [];
+      $return_var = null;
+      exec($command, $output, $return_var);
+
+      if ($return_var !== 0) {
+        throw new \RuntimeException(
+          "cwebp conversion failed with status $return_var: " . implode("\n", $output)
+        );
+      }
+    } catch (\Exception $e) {
+      throw new \RuntimeException("Failed to execute cwebp: " . $e->getMessage());
+    }
+  }
+
+  ///// TEMP just for testing
+  // private function create_file_array($file_path)
+  // {
+  //   if (!file_exists($file_path))
+  //     throw new \Exception("File not found: $file_path");
+
+  //   // Get file info
+  //   $path_info = pathinfo($file_path);
+  //   $mime_type = mime_content_type($file_path);
+  //   // Get absolute path
+  //   $absolute_path = realpath($file_path);
+
+  //   return [
+  //     'name' => $path_info['basename'],
+  //     'type' => $mime_type,
+  //     'tmp_name' => $absolute_path,
+  //     'error' => 0,
+  //     'file' => $file_path,
+  //     'size' => filesize($file_path)
+  //   ];
+  //   // print_r($a);
+  //   // return $a;
+  // }
 }

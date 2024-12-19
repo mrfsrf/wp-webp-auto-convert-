@@ -1,6 +1,6 @@
 <?php
 
-if (!defined('ABSPATH')) exit;
+// if (!defined('ABSPATH')) exit;
 
 if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
   add_action('admin_notices', function () {
@@ -11,4 +11,6 @@ if (!file_exists(__DIR__ . '/vendor/autoload.php')) {
 
 require __DIR__ . '/vendor/autoload.php';
 
-new mrfsrf\AutoWebPConverter();
+// new mrfsrf\AutoWebPConverter();
+
+new mrfsrf\AutoWebPConverter('./placeholder.png');
