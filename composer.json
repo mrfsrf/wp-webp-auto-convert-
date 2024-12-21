@@ -1,5 +1,10 @@
 {
     "name": "mrfsrf/wp-webp-auto-convert",
+    "description": "WordPress plugin for automatic WebP image conversion and serving",
+    "type": "library",
+    "keywords": ["wordpress", "webp", "image-conversion", "optimization"],
+    "homepage": "https://github.com/mrfsrf/wp-webp-auto-convert",
+    "license": "MIT",
     "authors": [
         {
             "name": "Luka Juras",
@@ -7,11 +12,15 @@
         }
     ],
     "require": {
-        "rosell-dk/webp-convert": "^2.9"
+        "php": ">=7.4"
     },
     "autoload": {
         "psr-4": {
-            "mrfsrf\\": "src/"
+            "Mrfsrf\\WpWebpAutoConvert\\": "src/"
         }
-    }
+    },
+    "support": {
+        "issues": "https://github.com/mrfsrf/wp-webp-auto-convert/issues"
+    },
+    "minimum-stability": "stable"
 }
