@@ -3,6 +3,7 @@
 namespace Mrfsrf\WpWebpAutoConvert;
 
 use Mrfsrf\WpWebpAutoConvert\Cwebp;
+use Mrfsrf\WpWebpAutoConvert\Helper\Notif;
 
 class AutoWebPConverter
 {
@@ -15,7 +16,7 @@ class AutoWebPConverter
     \add_filter('upload_mimes', [$this, 'add_webp_mime']);
   }
 
-  /** Add WebP to allowed MIME types. */
+  /** Add WebP to  MIME types. */
   public function add_webp_mime(array $mimes): array|null
   {
     $mimes['webp'] = 'image/webp';
@@ -28,24 +29,18 @@ class AutoWebPConverter
    */
   public function convert_to_webp(array $upload): array
   {
-    $allowed_types = ['image/jpeg', 'image/png'];
-    if (!in_array($upload['type'], $allowed_types)) return $upload;
+    if (!\in_array($upload['type'], ['image/jpeg', 'image/png']))
+      return $upload;
 
     $file_path = $upload['file'];
     $webp_path = $this->get_webp_path($file_path);
-    $mime_type = str_replace('image/', '', $upload['type']);
+    $mime_type = \str_replace('image/', '', $upload['type']);
 
     try {
       $this->create_webp_image($file_path, $webp_path, $mime_type);
       $upload['webp_file'] = $webp_path; // Keep original file and add WebP version
-    } catch (\Exception $e) {
-      // echo 'WebP Conversion Error: ' . $e->getMessage();
-      \add_action('admin_notices', function () use ($e) {
-        printf(
-          '<div class="error"><p>%s</p></div>',
-          \esc_html('WebP conversion failed: ' . $e->getMessage())
-        );
-      });
+    } catch (\Throwable $e) {
+      Notif::wp_admin($e, 'WebP conversion failed');
     }
     return $upload;
   }
@@ -53,7 +48,7 @@ class AutoWebPConverter
   /** Get WebP filename from original. */
   protected function get_webp_path(string $file_path): string
   {
-    return preg_replace('/\.(jpe?g|png)$/i', '.webp', $file_path);
+    return \preg_replace('/\.(jpe?g|png)$/i', '.webp', $file_path);
   }
 
   /** Create WebP version of image. */
@@ -62,9 +57,8 @@ class AutoWebPConverter
     string $webp_path,
     string $mime_type,
   ): void {
-    $output = [];
     $return_status = null;
-    \exec('command -v cwebp', $output, $return_status);
+    \exec('command -v cwebp', [], $return_status);
 
     if ($return_status === 0) {
       $format_config = $this->config->get_format_config($mime_type);
@@ -76,7 +70,11 @@ class AutoWebPConverter
       );
       Cwebp::execute_cwebp_command($command);
     } else {
-      throw new \RuntimeException("cwebp is not installed");
+      Notif::wp_admin(
+        new \RuntimeException(''),
+        "cwebp is not installed"
+      );
+      return;
     }
   }
 

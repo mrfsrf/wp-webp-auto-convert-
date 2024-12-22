@@ -2,6 +2,8 @@
 
 namespace Mrfsrf\WpWebpAutoConvert;
 
+use Mrfsrf\WpWebpAutoConvert\Helper\Notif;
+
 class Cwebp
 {
   private static array $options;
@@ -18,7 +20,7 @@ class Cwebp
     'sharpness'     => 'sharpness',     // spatial noise shaping
     'hint'          => 'hint',          // specify image characteristics (only one): photo, picture or graph
     'low-memory'    => 'low-memory',    // reduce memory usage (slower encoding)
-    'exact'         => 'exact'          
+    'exact'         => 'exact'
     // Add any custom mappings here
     // 'my_custom_option' => 'custom_flag'
   ];
@@ -35,8 +37,14 @@ class Cwebp
     string $image_type
   ): string {
     $mime_type = str_replace('image/', '', $image_type);
-    if (!isset(self::$options[$mime_type]))
-      throw new \InvalidArgumentException("Unsupported image type: $image_type");
+
+    if (!isset(self::$options[$mime_type])) {
+      Notif::wp_admin(
+        new \InvalidArgumentException($mime_type),
+        'Unsupported image type'
+      );
+      return;
+    }
 
     $opts = self::$options[$mime_type];
     $command_parts = ['cwebp'];
@@ -65,18 +73,16 @@ class Cwebp
 
   static function execute_cwebp_command(string $command): void
   {
-    try {
-      $output = [];
-      $return_var = null;
-      exec($command, $output, $return_var);
+    $output = [];
+    $return_var = null;
+    exec($command, $output, $return_var);
 
-      if ($return_var !== 0) {
-        throw new \RuntimeException(
-          "cwebp conversion failed with status $return_var: " . implode("\n", $output)
-        );
-      }
-    } catch (\Exception $e) {
-      throw new \RuntimeException("Failed to execute cwebp: " . $e->getMessage());
+    if ($return_var !== 0) {
+      Notif::wp_admin(
+        new \RuntimeException(\implode("\n", $output)),
+        "cwebp conversion failed with status $return_var"
+      );
+      return;
     }
   }
 }
